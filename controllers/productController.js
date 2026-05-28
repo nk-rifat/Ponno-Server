@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 
-// GET ALL PRODUCTS
+// Get all products
 const getAllProducts = async (req, res) => {
   try {
     const { category, price, sort, page = 1, limit = 9 } = req.query;
@@ -64,6 +64,25 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+// Get single product
+const getProductById = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
+  getProductById
 };
