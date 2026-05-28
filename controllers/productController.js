@@ -3,7 +3,7 @@ const Product = require("../models/Product");
 // GET ALL PRODUCTS
 const getAllProducts = async (req, res) => {
   try {
-    const { category, price, sort } = req.query;
+    const { category, price, sort, page = 1, limit = 9 } = req.query;
 
     let filter = {};
     let sortOption = {};
@@ -37,11 +37,23 @@ const getAllProducts = async (req, res) => {
     if (sort === "newest") sortOption.createdAt = -1;
     if (sort === "rating") sortOption.rating = -1;
 
-    const products = await Product.find(filter).sort(sortOption);
+    // PAGINATION LOGIC
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const total = await Product.countDocuments(filter);
+
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNumber);
 
     res.status(200).json({
       success: true,
-      count: products.length,
+      total,
+      page: pageNumber,
+      pages: Math.ceil(total / limitNumber),
       data: products,
     });
   } catch (error) {
