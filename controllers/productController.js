@@ -3,9 +3,10 @@ const Product = require("../models/Product");
 // GET ALL PRODUCTS
 const getAllProducts = async (req, res) => {
   try {
-    const { category, price } = req.query;
+    const { category, price, sort } = req.query;
 
     let filter = {};
+    let sortOption = {};
 
     //category filter
     if (category) {
@@ -13,21 +14,30 @@ const getAllProducts = async (req, res) => {
     }
 
     //price filter
-    if (price.includes("+")) {
-      const min = price.replace("+", "");
+    if (price) {
+      if (price.includes("+")) {
+        const min = price.replace("+", "");
 
-      filter.price = {
-        $gte: Number(min),
-      };
-    } else {
-      const [min, max] = price.split("-");
+        filter.price = {
+          $gte: Number(min),
+        };
+      } else {
+        const [min, max] = price.split("-");
 
-      filter.price = {
-        $gte: Number(min),
-        $lte: Number(max),
-      };
+        filter.price = {
+          $gte: Number(min),
+          $lte: Number(max),
+        };
+      }
     }
-    const products = await Product.find(filter);
+
+    // sorting
+    if (sort === "price_asc") sortOption.price = 1;
+    if (sort === "price_desc") sortOption.price = -1;
+    if (sort === "newest") sortOption.createdAt = -1;
+    if (sort === "rating") sortOption.rating = -1;
+
+    const products = await Product.find(filter).sort(sortOption);
 
     res.status(200).json({
       success: true,
