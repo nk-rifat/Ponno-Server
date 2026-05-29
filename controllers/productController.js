@@ -82,7 +82,22 @@ const getProductById = async (req, res) => {
   }
 };
 
+// Get related products
+const getRelatedProducts = async (req, res) => {
+  try {
+    const products = await Product.find({
+      category,
+      _id: { $ne: id },
+    }).limit(4);
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   getAllProducts,
-  getProductById
+  getProductById,
+  getRelatedProducts,
 };
