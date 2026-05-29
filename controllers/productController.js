@@ -85,6 +85,8 @@ const getProductById = async (req, res) => {
 // Get related products
 const getRelatedProducts = async (req, res) => {
   try {
+    const { category, id } = req.query;
+
     const products = await Product.find({
       category,
       _id: { $ne: id },
