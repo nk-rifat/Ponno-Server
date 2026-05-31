@@ -98,8 +98,31 @@ const getRelatedProducts = async (req, res) => {
   }
 };
 
+// Get Featured Products
+
+const getFeaturedProducts = async (req, res) => {
+  try {
+    const products = (await Product.find())
+      .toSorted({ createdAt: -1 })
+      .limit(8);
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch features products",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
   getRelatedProducts,
+  getFeaturedProducts,
 };
