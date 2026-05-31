@@ -102,9 +102,7 @@ const getRelatedProducts = async (req, res) => {
 
 const getFeaturedProducts = async (req, res) => {
   try {
-    const products = (await Product.find())
-      .toSorted({ createdAt: -1 })
-      .limit(8);
+    const products = await Product.find().sort({ createdAt: -1 }).limit(8);
 
     res.status(200).json({
       success: true,
