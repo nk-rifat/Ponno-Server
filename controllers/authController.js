@@ -1,12 +1,43 @@
 const admin = require("../config/firebaseAdmin");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { createAccessToken, createRefreshToken } = require("../utils/jwt");
+
+//Cookie options
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  path: "/",
+};
+
+//Helper: issue tokens and save hash
+
+const issueTokens = async (res, payload) => {
+  const accessToken = createAccessToken(payload);
+  const refreshToken = createRefreshToken(payload);
+
+  const hashed = await bcrypt.hash(refreshToken, 10);
+  await User.findOneAndUpdate(
+    { email: payload.email },
+    { refreshTokenHash: hashed },
+  );
+
+  res.cookie("refreshToken", refreshToken, cookieOptions);
+
+  return accessToken;
+};
 
 //Login
 exports.login = async (req, res) => {
   try {
     const { firebaseToken } = req.body;
+
+    if (!firebaseToken) {
+      return res.status(400).json({ message: "Firebase token is required" });
+    }
 
     // Verify authenticity against Google/Firebase servers
     const decoded = await admin.auth().verifyIdToken(firebaseToken);
@@ -19,12 +50,12 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Upsert User: Finds existing profile or automatically provisions a new one
-    const user = await User.findOneAndUpdate(
-      { email: decoded.email },
-      { email: decoded.email },
-      { upsert: true, new: true },
-    );
+    const user = await User.findOne({ email: decoded.email });
+    if (!user) {
+      return res.status(404).json({
+        message: "Account not found. Please register first.",
+      });
+    }
 
     const payload = {
       email: decoded.email,
@@ -32,22 +63,9 @@ exports.login = async (req, res) => {
       role: user.role,
     };
 
-    const accessToken = createAccessToken(payload);
-    const refreshToken = createRefreshToken(payload);
+    const accessToken = await issueTokens(res, payload);
 
-    // Securely hash the refresh token before placing it in MongoDB
-    const hashed = await bcrypt.hash(refreshToken, 10);
-    user.refreshTokenHash = hashed;
-    await user.save();
-
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-    });
-
-    res.json({ accessToken });
+    res.status(200).json({ accessToken });
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -83,13 +101,13 @@ exports.refresh = async (req, res) => {
       role: user.role,
     });
 
-    res.json({ accessToken: newAccessToken });
+    res.status(200).json({ accessToken: newAccessToken });
   } catch {
     res.sendStatus(403);
   }
 };
 
-// Safe session restore
+// Me
 
 exports.me = async (req, res) => {
   try {
@@ -99,9 +117,13 @@ exports.me = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    res.json({
+    res.status(200).json({
       email: user.email,
       role: user.role,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profilePic: user.profilePic,
     });
   } catch (error) {
     res.status(500).json({
