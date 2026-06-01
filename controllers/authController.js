@@ -30,6 +30,42 @@ const issueTokens = async (res, payload) => {
   return accessToken;
 };
 
+// Register
+exports.register = async (req, res) => {
+  try {
+    const { firebaseToken, firstName, lastName, profilePic } = req.body;
+
+    if (!firebaseToken) {
+      return res.status(400).json({ message: "Firebase token is required" });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(firebaseToken);
+
+    if (!decoded.email_verified) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
+
+    const existing = await User.findOne({ email: decoded.email });
+
+    if (existing) {
+      return res
+        .status(409)
+        .json({ message: "Account already exists. Please log in" });
+    }
+
+    await User.create({
+      email: decoded.email,
+      firstName: firstName || "",
+      lastName: lastName || "",
+      profilePic: profilePic || "",
+    });
+
+    res.status(201).json({ message: "Account created Successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 //Login
 exports.login = async (req, res) => {
   try {
