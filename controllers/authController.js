@@ -214,3 +214,24 @@ exports.me = async (req, res) => {
     });
   }
 };
+
+// Logout
+
+exports.logout = async (req, res) => {
+  try {
+    const token = req.cookies.refreshToken;
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.REFRESH_SECRET);
+
+      await User.findOneAndUpdate(
+        { email: decoded.email },
+        { refreshTokenHash: null },
+      );
+    }
+  } catch (_) {
+  } finally {
+    res.clearCookie("refreshToken", cookieOptions);
+    res.sendStatus(204);
+  }
+};
