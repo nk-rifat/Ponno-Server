@@ -109,6 +109,53 @@ exports.login = async (req, res) => {
   }
 };
 
+//Google Auth (Register + Login)
+
+exports.googleAuth = async (req, res) => {
+  try {
+    const { firebaseToken } = req.body;
+
+    if (!firebaseToken) {
+      return res.status(400).json({ message: "Firebase Token is required" });
+    }
+
+    const decoded = await admin.auth().verifyIdToken(firebaseToken);
+
+    if (!decoded.email_verified) {
+      return res.status(403).json({ message: "Email not verified" });
+    }
+
+    let user = await User.findOne({ email: jwt.decode.email });
+
+    let isNewUser = false;
+
+    if (!user) {
+      const nameParts = (decoded.name || "").split(" ");
+
+      user = await User.create({
+        email: decoded.email,
+        firstName: nameParts[0] || "",
+        lastName: nameParts.slice(1).join(" ") || "",
+        profilePic: decoded.picture || "",
+      });
+
+      isNewUser = true;
+    }
+
+    const payload = {
+      email: user.email,
+      uid: decoded.uid,
+      role: user.role,
+    };
+
+    const accessToken = await issueTokens(res, payload);
+
+    res.status(200).json({ accessToken, isNewUser });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // Refresh Token
 
 exports.refresh = async (req, res) => {
