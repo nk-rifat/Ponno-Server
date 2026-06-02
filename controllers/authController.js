@@ -4,7 +4,6 @@ const { generateEmailToken } = require("../utils/token");
 const { sendVerificationEmail } = require("../services/emailService");
 const jwt = require("jsonwebtoken");
 
-
 // Register User
 
 exports.registerUser = async (req, res) => {
@@ -46,6 +45,49 @@ exports.registerUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Registration failed",
+      error: error.message,
+    });
+  }
+};
+
+
+// Verify Email
+
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+
+    // 1. Verify token
+    const decoded = jwt.verify(token, process.env.EMAIL_VERIFICATION_SECRET);
+
+    // 2. Find user
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 3. Check if already verified
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email already verified" });
+    }
+
+    // 4. Update user
+    user.isVerified = true;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid or expired token",
       error: error.message,
     });
   }
