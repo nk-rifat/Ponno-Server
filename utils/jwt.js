@@ -20,11 +20,7 @@ exports.generateRefreshToken = (user) => {
 // Email verification Token
 
 exports.generateEmailToken = (user) => {
-  return jwt.sign(
-    { id: user._id, status: user.isVerified },
-    process.env.EMAIL_VERIFICATION_SECRET,
-    {
-      expiresIn: "1h",
-    },
-  );
+  return jwt.sign({ id: user._id }, process.env.EMAIL_VERIFICATION_SECRET, {
+    expiresIn: "1h",
+  });
 };

@@ -24,7 +24,7 @@ exports.sendVerificationEmail = async (email, verificationLink) => {
           </a>
 
           <p style="margin-top:20px;">
-            This link will expire in 24 hours.
+            This link will expire in 1 hours.
           </p>
         </div>
       `,
