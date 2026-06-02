@@ -1,7 +1,8 @@
 const User = require("../models/User");
-const { hashPassword } = require("../utils/password");
-const { generateEmailToken } = require("../utils/token");
 const { sendVerificationEmail } = require("../services/emailService");
+const { hashPassword } = require("../utils/hash");
+const { generateEmailToken } = require("../utils/jwt");
+
 const jwt = require("jsonwebtoken");
 
 // Register User
