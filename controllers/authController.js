@@ -31,10 +31,15 @@ exports.registerUser = async (req, res) => {
     // 4. Generate email verification token (1 hour)
     const emailToken = generateEmailToken(user);
 
-    // 5. Create verification link
+    // 5. Save token in DB
+    user.emailVerificationToken = emailToken;
+    user.emailVerificationExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    await user.save();
+
+    // 6. Create verification link
     const verifyLink = `${process.env.CLIENT_URL}/verify-email?token=${emailToken}`;
 
-    // 6. Send email
+    // 7. Send email
     await sendVerificationEmail(email, verifyLink);
 
     return res.status(201).json({
@@ -50,7 +55,6 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-
 // Verify Email
 
 exports.verifyEmail = async (req, res) => {
@@ -64,20 +68,34 @@ exports.verifyEmail = async (req, res) => {
     // 1. Verify token
     const decoded = jwt.verify(token, process.env.EMAIL_VERIFICATION_SECRET);
 
-    // 2. Find user
-    const user = await User.findById(decoded.id);
+    // 2. Find user with token match
+    const user = await User.findOne({
+      _id: decoded.id,
+      emailVerificationToken: token,
+    });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 3. Check if already verified
+    // 3. Check expiry
+    if (user.emailVerificationExpires < Date.now()) {
+      return res.status(400).json({
+        message: "Token expired",
+      });
+    }
+
+    // 4. Check if already verified
     if (user.isVerified) {
       return res.status(400).json({ message: "Email already verified" });
     }
-
-    // 4. Update user
+    // 5. Verify user
     user.isVerified = true;
+
+    // 6. Invalidate token (IMPORTANT)
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+
     await user.save();
 
     return res.status(200).json({
