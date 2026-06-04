@@ -188,3 +188,24 @@ exports.loginUser = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Logout user
+
+exports.logoutUser = async (req, res) => {
+  try {
+    const userId = req.id;
+
+    // Clear token from DB
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { refreshTokenHash: null });
+    }
+
+    // Clear cookies from browser
+    res.clearCookie("accessToken", cookieOptions);
+    res.clearCookie("refreshToken", cookieOptions);
+
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
