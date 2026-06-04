@@ -42,12 +42,10 @@ const getAllProducts = async (req, res) => {
     const limitNumber = Number(limit);
     const skip = (pageNumber - 1) * limitNumber;
 
-    const total = await Product.countDocuments(filter);
-
-    const products = await Product.find(filter)
-      .sort(sortOption)
-      .skip(skip)
-      .limit(limitNumber);
+    const [total, products] = await Promise.all([
+      Product.countDocuments(filter),
+      Product.find(filter).sort(sortOption).skip(skip).limit(limitNumber),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -102,7 +100,12 @@ const getRelatedProducts = async (req, res) => {
 
 const getFeaturedProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }).limit(8);
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .select(
+        "_id productName images price discountPrice stock rating category",
+      );
 
     res.status(200).json({
       success: true,
