@@ -1,6 +1,11 @@
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../services/emailService");
-const { hashPassword, comparePassword, hashToken } = require("../utils/hash");
+const {
+  hashPassword,
+  comparePassword,
+  hashToken,
+  compareToken,
+} = require("../utils/hash");
 const {
   generateEmailToken,
   generateAccessToken,
@@ -211,5 +216,60 @@ exports.logoutUser = async (req, res) => {
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Refresh access token
+
+exports.refreshAccessToken = async (req, res) => {
+  try {
+    const { refreshToken } = req.cookies;
+
+    // 1. check cookie
+    if (!refreshToken) {
+      return res.status(401).json({ message: "No refresh token" });
+    }
+
+    // 2. verify jwt signature and expiry
+    let decoded;
+    try {
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch {
+      return res
+        .status(403)
+        .json({ message: "Refresh token expired or invalid" });
+    }
+
+    // 3. find user
+
+    const user = await User.findById(decoded.id);
+    if (!user) {
+      return res.status(403).json({ message: "User not found" });
+    }
+
+    // 4. compare raw cookie token with db dash token
+
+    const isTokenValid = await compareToken(
+      refreshToken,
+      user.refreshTokenHash,
+    );
+
+    if (!isTokenValid) {
+      return res
+        .status(403)
+        .json({ message: "Session invalidated. Please login again" });
+    }
+
+    // 5. provide new access token
+    const newAccessToken = generateAccessToken(user._id);
+
+    res.cookie("accessToken", newAccessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.status(200).json({ message: "Token refreshed" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
   }
 };

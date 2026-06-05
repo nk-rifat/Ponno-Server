@@ -6,16 +6,13 @@ const {
   verifyEmail,
   loginUser,
   logoutUser,
+  refreshAccessToken,
 } = require("../controllers/authController");
 
-// Register user
 router.post("/register", registerUser);
-
-// Email verification
 router.get("/verify-email", verifyEmail);
-
 router.post("/login", loginUser);
-
 router.post("/logout", logoutUser);
+router.post("/refresh", refreshAccessToken);
 
 module.exports = router;
