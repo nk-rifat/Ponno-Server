@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { verifyAccessToken } = required("../middleware/auth.js");
+const { verifyAccessToken } = require("../middleware/auth.js");
 
 const {
   registerUser,
@@ -10,6 +10,7 @@ const {
   refreshAccessToken,
   getMe,
 } = require("../controllers/authController");
+
 
 router.post("/register", registerUser);
 router.get("/verify-email", verifyEmail);

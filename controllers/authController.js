@@ -135,7 +135,7 @@ exports.loginUser = async (req, res) => {
 
     // 1. Find User
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -164,7 +164,7 @@ exports.loginUser = async (req, res) => {
     // 5. Save refresh token to DB
 
     user.refreshTokenHash = hashToken(refreshToken);
-    await User.save();
+    await user.save();
 
     // 6. Set httpOnly cookie
 
@@ -190,6 +190,7 @@ exports.loginUser = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log("LOGIN ERROR 👉", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -203,7 +204,7 @@ exports.logoutUser = async (req, res) => {
     // Clear token from DB
     if (refreshToken) {
       const hashedToken = hashToken(refreshToken);
-      await User.findByIdAndUpdate(
+      await User.findOneAndUpdate(
         { refreshTokenHash: hashedToken },
         { refreshTokenHash: null },
       );
@@ -278,7 +279,7 @@ exports.refreshAccessToken = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
+    const user = await User.findById(req.userId)
       .select("-password -refreshTokenHash")
       .lean();
 

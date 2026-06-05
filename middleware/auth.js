@@ -7,9 +7,10 @@ exports.verifyAccessToken = (req, res, next) => {
     return res.status(401).json({ message: "Not authenticate" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    req.user = decoded;
+    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    req.userId = decoded.id;
+    next();
   } catch (error) {
-    return res.status(401).json({ message: "Access token expired" });
+    return res.status(401).json({ message: "Access token expired"});
   }
 };
