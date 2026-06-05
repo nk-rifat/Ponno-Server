@@ -234,7 +234,7 @@ exports.refreshAccessToken = async (req, res) => {
     // 2. verify jwt signature and expiry
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
     } catch {
       return res
         .status(403)
