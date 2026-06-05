@@ -22,6 +22,6 @@ exports.compareToken = async (rawToken, hashToken) => {
   const hashedIncoming = exports.hashToken(rawToken);
   return crypto.timingSafeEqual(
     Buffer.from(hashedIncoming),
-    Buffer.from(hashedToken),
+    Buffer.from(hashToken),
   );
 };
