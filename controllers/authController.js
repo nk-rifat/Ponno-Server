@@ -1,6 +1,6 @@
 const User = require("../models/User");
 const { sendVerificationEmail } = require("../services/emailService");
-const { hashPassword, comparePassword } = require("../utils/hash");
+const { hashPassword, comparePassword, hashToken } = require("../utils/hash");
 const {
   generateEmailToken,
   generateAccessToken,
@@ -103,7 +103,7 @@ exports.verifyEmail = async (req, res) => {
     // 5. Verify user
     user.isVerified = true;
 
-    // 6. Invalidate token (IMPORTANT)
+    // 6. Invalidate token
     user.emailVerificationToken = undefined;
     user.emailVerificationExpires = undefined;
 
@@ -158,7 +158,7 @@ exports.loginUser = async (req, res) => {
 
     // 5. Save refresh token to DB
 
-    user.refreshTokenHash = hashPassword(refreshToken);
+    user.refreshTokenHash = hashToken(refreshToken);
     await User.save();
 
     // 6. Set httpOnly cookie
@@ -193,11 +193,15 @@ exports.loginUser = async (req, res) => {
 
 exports.logoutUser = async (req, res) => {
   try {
-    const userId = req.id;
+    const { refreshToken } = req.cookies;
 
     // Clear token from DB
-    if (userId) {
-      await User.findByIdAndUpdate(userId, { refreshTokenHash: null });
+    if (refreshToken) {
+      const hashedToken = hashToken(refreshToken);
+      await User.findByIdAndUpdate(
+        { refreshTokenHash: hashedToken },
+        { refreshTokenHash: null },
+      );
     }
 
     // Clear cookies from browser
