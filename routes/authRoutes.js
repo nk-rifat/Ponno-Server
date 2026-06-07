@@ -16,7 +16,7 @@ router.post("/register", registerUser);
 router.get("/verify-email", verifyEmail);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
-router.post("/refresh", refreshAccessToken);
+router.post("/refresh-token", refreshAccessToken);
 router.get("/me", verifyAccessToken, getMe);
 
 module.exports = router;
