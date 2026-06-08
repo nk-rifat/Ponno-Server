@@ -27,3 +27,42 @@ exports.getCart = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch cart" });
   }
 };
+
+// Post api
+
+exports.saveCartItem = async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+
+    quantity = Number(quantity);
+
+    if (!productId) {
+      return res.status(400).json({ message: "Product ID required" });
+    }
+
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ message: "Invalid quantity" });
+    }
+
+    let cart = await Cart.findOne({ userId: req.userId });
+
+    if (!cart) {
+      cart = new Cart({ userId: req.userId, items: [] });
+    }
+
+    const existing = cart.items.find(
+      (i) => i.productId.toString() === productId,
+    );
+
+    if (existing) {
+      existing.quantity = quantity;
+    } else {
+      cart.items.push({ productId, quantity });
+    }
+
+    await cart.save();
+    res.json({ message: "Cart Updated" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update cart" });
+  }
+};
