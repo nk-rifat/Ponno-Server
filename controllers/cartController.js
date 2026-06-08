@@ -56,7 +56,7 @@ exports.saveCartItem = async (req, res) => {
     );
 
     if (existing) {
-      existing.quantity = quantity;
+      existing.quantity += quantity;
     } else {
       cart.items.push({ productId, quantity: safeQty });
     }
