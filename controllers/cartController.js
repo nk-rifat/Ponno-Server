@@ -33,9 +33,9 @@ exports.getCart = async (req, res) => {
 
 exports.saveCartItem = async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId } = req.body;
 
-    quantity = Number(quantity);
+    const quantity = Number(req.body.quantity);
 
     const product = await Product.findById(productId);
 
