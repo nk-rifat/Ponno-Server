@@ -51,3 +51,12 @@ exports.toggleWishlist = async (req, res) => {
     res.status(500).json({ message: "Failed to update wishlist" });
   }
 };
+
+// All delete
+
+exports.clearWishlist = async (req, res) => {
+  try {
+  } catch (error) {
+    res.status(500).json({ message: "Failed to clear wishlist" });
+  }
+};
