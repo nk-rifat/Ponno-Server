@@ -24,3 +24,30 @@ exports.getWishlist = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch wishlist" });
   }
 };
+
+// Post, toggle wishlist
+
+exports.toggleWishlist = async (req, res) => {
+  try {
+    const { productId } = req.body;
+
+    let wishlist = await Wishlist.findOne({ userId: req.userId });
+
+    if (!wishlist) {
+      wishlist = new Wishlist({ userId: req.userId, items: [] });
+    }
+
+    const index = wishlist.items.findIndex((id) => id.toString() === productId);
+
+    if (index !== -1) {
+      wishlist.items.splice(index, 1); //remove
+    } else {
+      wishlist.items.push(productId); // add
+    }
+
+    await wishlist.save();
+    res.json({ message: "Wishlist updated" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to update wishlist" });
+  }
+};
