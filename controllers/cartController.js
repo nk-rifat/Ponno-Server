@@ -1,4 +1,5 @@
 const Cart = require("../models/Cart");
+const Product = require("../models/Product");
 
 // Get api
 exports.getCart = async (req, res) => {
@@ -36,13 +37,13 @@ exports.saveCartItem = async (req, res) => {
 
     quantity = Number(quantity);
 
-    if (!productId) {
-      return res.status(400).json({ message: "Product ID required" });
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
     }
 
-    if (!quantity || quantity < 1) {
-      return res.status(400).json({ message: "Invalid quantity" });
-    }
+    const safeQty = Math.max(1, Math.min(quantity, product.stock));
 
     let cart = await Cart.findOne({ userId: req.userId });
 
@@ -57,7 +58,7 @@ exports.saveCartItem = async (req, res) => {
     if (existing) {
       existing.quantity = quantity;
     } else {
-      cart.items.push({ productId, quantity });
+      cart.items.push({ productId, quantity: safeQty });
     }
 
     await cart.save();
