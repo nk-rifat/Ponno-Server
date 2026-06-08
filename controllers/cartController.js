@@ -66,3 +66,20 @@ exports.saveCartItem = async (req, res) => {
     res.status(500).json({ message: "Failed to update cart" });
   }
 };
+
+// Delete api
+exports.removeCartItem = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.userId });
+    if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+    cart.items = cart.items.filter(
+      (i) => i.productId.toString() !== req.params.productId,
+    );
+
+    await cart.save();
+    res.json({ message: "Item remove" });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to remove Item" });
+  }
+};
