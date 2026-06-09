@@ -56,6 +56,8 @@ exports.toggleWishlist = async (req, res) => {
 
 exports.clearWishlist = async (req, res) => {
   try {
+    await Wishlist.findOneAndUpdate({ userId: req.userId }, { items: [] });
+    res.json({ message: "Wishlist cleared" });
   } catch (error) {
     res.status(500).json({ message: "Failed to clear wishlist" });
   }
