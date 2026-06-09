@@ -11,6 +11,31 @@ exports.getCart = async (req, res) => {
 
     if (!cart) return res.json({ items: [] });
 
+    // remove items where product no longer exists
+    cart.items = cart.items.filter((item) => item.productId);
+
+    let adjusted = false;
+
+    for (const item of cart.items) {
+      const currentStock = item.productId.stock;
+
+      // remove out of stock items
+      if (currentStock === 0) {
+        cart.items = cart.items.filter(
+          (i) => i.productId._id.toString() !== item.productId._id.toString(),
+        );
+        adjusted = true;
+        continue;
+      }
+      // auto-correct quantity if exceeds current stock
+      if (item.quantity > currentStock) {
+        item.quantity = currentStock;
+        adjusted = true;
+      }
+    }
+
+    if (adjusted) await cart.save();
+
     const items = cart.items
       .filter((item) => item.productId)
       .map((item) => ({
