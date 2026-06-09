@@ -3,7 +3,7 @@ const Wishlist = require("../models/Wishlist");
 // Get api
 exports.getWishlist = async (req, res) => {
   try {
-    const wishlist = await Wishlist.find({ userId: req.userId }).populate(
+    const wishlist = await Wishlist.findOne({ userId: req.userId }).populate(
       "items",
       "productName images price discountPrice stock",
     );
