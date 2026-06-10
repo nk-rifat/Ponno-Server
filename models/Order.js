@@ -27,3 +27,38 @@ const orderItemsSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   quantity: { type: Number, required: true, min: 1 },
 });
+
+const orderSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    items: [orderItemsSchema],
+    delivery: {
+      name: { type: String, required: true },
+      phone: { type: String, required: true },
+      division: { type: String, required: true },
+      zila: { type: String, required: true },
+      upazila: { type: String, required: true },
+      union: { type: String, required: true },
+      address: { type: String, required: true },
+      note: { type: String, default: "" },
+    },
+    status: {
+      type: String,
+      enum: [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      default: "pending",
+    },
+    statusHistory: [statusHistorySchema],
+  },
+  { timestamps: true },
+);
