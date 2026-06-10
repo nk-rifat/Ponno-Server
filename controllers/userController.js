@@ -1,4 +1,4 @@
-import User from "../models/User";
+const User = require("../models/User");
 
 // Get api me
 exports.getMe = async (req, res) => {
@@ -19,7 +19,7 @@ exports.getMe = async (req, res) => {
 
 // Patch api (update name and profile pic)
 
-export const updateMe = async (req, res) => {
+exports.updateMe = async (req, res) => {
   try {
     const { firstName, lastName, profilePic } = req.body;
 
