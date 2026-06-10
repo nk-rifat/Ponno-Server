@@ -27,7 +27,7 @@ exports.updateMe = async (req, res) => {
 
     if (firstName !== undefined) {
       const trimmed = firstName.trim();
-      if (!trim)
+      if (!trimmed)
         return res.status(400).json({ message: "First name cannot be empty" });
 
       updates.firstName = trimmed;
@@ -38,7 +38,7 @@ exports.updateMe = async (req, res) => {
     }
 
     if (profilePic !== undefined) {
-      if (profilePic && !profilePic.startsWih("https://res.cloudinary.com")) {
+      if (profilePic && !profilePic.startsWith("https://res.cloudinary.com")) {
         return res.status(400).json({ message: "Invalid profile picture URL" });
       }
       updates.profilePic = profilePic;
@@ -47,7 +47,7 @@ exports.updateMe = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       req.userId,
       { $set: updates },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     ).select("-password -refreshTokenHash");
 
     if (!updatedUser)
