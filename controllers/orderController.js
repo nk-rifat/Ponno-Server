@@ -35,7 +35,7 @@ exports.placeOrder = async (req, res) => {
     for (const field of requiredFields) {
       const value = delivery?.[field];
 
-      if (!value || typeof value !== "String" || !value.trim()) {
+      if (!value || typeof value !== "string" || !value.trim()) {
         return res.status(400).json({
           success: false,
           message: `Delivery field "${field} is required"`,
@@ -45,7 +45,7 @@ exports.placeOrder = async (req, res) => {
 
     // 3. validata BD phone number
     const phoneRegex = /^(?:\+88)?01[3-9]\d{8}$/;
-    if (!phoneRegex.text(delivery.phone)) {
+    if (!phoneRegex.test(delivery.phone)) {
       return res.status(400).json({
         success: false,
         message: "Invalid phone number",
@@ -79,9 +79,9 @@ exports.placeOrder = async (req, res) => {
 
       verifiedItems.push({
         productId: product._id,
-        name: product.name,
+        name: product.productName,
         image: product.images[0],
-        price: product.price,
+        price: finalPrice,
         quantity: item.quantity,
       });
     }
@@ -109,7 +109,7 @@ exports.placeOrder = async (req, res) => {
       ],
     });
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "Order placed successfully",
       orderId: order._id,

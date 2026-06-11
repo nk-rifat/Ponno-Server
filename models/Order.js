@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "pending",
     },
-    subtotal: {type: Number, required},
+    subtotal: {type: Number, required: true},
     deliveryCharge: {type: Number, required: true},
     total: {type: Number, required: true},
     statusHistory: [statusHistorySchema],
