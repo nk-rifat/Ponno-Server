@@ -42,7 +42,6 @@ const orderSchema = new mongoose.Schema(
       division: { type: String, required: true },
       zila: { type: String, required: true },
       upazila: { type: String, default: "" },
-      union: { type: String, default: "" },
       address: { type: String, default: "" },
       note: { type: String, default: "" },
     },
