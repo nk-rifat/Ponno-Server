@@ -10,7 +10,7 @@ const getDeliveryCharge = (zila = "") => {
 exports.placeOrder = async (req, res) => {
   try {
     const { items, delivery } = req.body;
-    const userId = req.user.id;
+    const userId = req.userId;
 
     // 1. validate items
 
@@ -22,15 +22,7 @@ exports.placeOrder = async (req, res) => {
     }
 
     // 2. Validate delivery fields
-    const requiredFields = [
-      "name",
-      "phone",
-      "division",
-      "zila",
-      "upazila",
-      "union",
-      "address",
-    ];
+    const requiredFields = ["name", "phone", "division", "zila", "address"];
 
     for (const field of requiredFields) {
       const value = delivery?.[field];
@@ -80,7 +72,6 @@ exports.placeOrder = async (req, res) => {
       verifiedItems.push({
         productId: product._id,
         name: product.productName,
-        image: product.images[0],
         price: finalPrice,
         quantity: item.quantity,
       });
@@ -92,11 +83,23 @@ exports.placeOrder = async (req, res) => {
     // 6. Final total
     const total = subtotal + deliveryCharge;
 
-    // 7 . Create Order
+    // 7. Sanitize and structure the delivery object for database insertion
+    const optimizedDelivery = {
+      name: delivery.name.trim(),
+      phone: delivery.phone.trim(),
+      division: delivery.division.trim(),
+      zila: delivery.zila.trim(),
+      upazila:
+        typeof delivery.upazila === "string" ? delivery.upazila.trim() : "",
+      address: delivery.address.trim(),
+      note: typeof delivery.note === "string" ? delivery.note.trim() : "",
+    };
+
+    // 8 . Create Order
     const order = await Order.create({
       userId,
       items: verifiedItems,
-      delivery,
+      delivery: optimizedDelivery,
       subtotal,
       deliveryCharge,
       total,
@@ -116,6 +119,7 @@ exports.placeOrder = async (req, res) => {
       order,
     });
   } catch (error) {
+    console.log(error.message);
     res.status(500).json({
       success: false,
       message: "Failed to place order",
