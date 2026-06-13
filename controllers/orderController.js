@@ -7,6 +7,7 @@ const getDeliveryCharge = (zila = "") => {
   return isDhaka ? 120 : 150;
 };
 
+// create order api
 exports.placeOrder = async (req, res) => {
   try {
     const { items, delivery } = req.body;
@@ -126,3 +127,55 @@ exports.placeOrder = async (req, res) => {
     });
   }
 };
+
+// get single users orders with pagination and status filter
+exports.getMyOrders = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const status = req.query.status;
+
+    const filter = { userId };
+
+    if (status && status !== "all") {
+      const allowedStatuses = [
+        "pending",
+        "confirmed",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ];
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid status filter",
+        });
+      }
+      filter.status = status;
+    }
+    const totalOrdersCount = await Order.countDocuments(filter);
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      orders,
+      totalOrders,
+      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: page,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch orders",
+    });
+  }
+};
+
+
