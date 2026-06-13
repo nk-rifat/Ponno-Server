@@ -74,6 +74,7 @@ exports.placeOrder = async (req, res) => {
         productId: product._id,
         name: product.productName,
         price: finalPrice,
+        image: product.images[0],
         quantity: item.quantity,
       });
     }
@@ -155,7 +156,7 @@ exports.getMyOrders = async (req, res) => {
       }
       filter.status = status;
     }
-    const totalOrdersCount = await Order.countDocuments(filter);
+    const totalOrders = await Order.countDocuments(filter);
 
     const orders = await Order.find(filter)
       .sort({ createdAt: -1 })

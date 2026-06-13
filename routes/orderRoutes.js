@@ -10,6 +10,6 @@ const {
 
 router.post("/", verifyAccessToken, placeOrder);
 router.get("/my-orders", verifyAccessToken, getMyOrders);
-router.patch("/:id/cancel", protect, cancelOrder);
+router.patch("/:id/cancel", verifyAccessToken, cancelOrder);
 
 module.exports = router;
