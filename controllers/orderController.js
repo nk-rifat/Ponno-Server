@@ -178,4 +178,40 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
+// Cancel order api
+exports.cancelOrder = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { id } = req.params;
 
+    const order = await Order.findOne({ _id: id, userId });
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+    if (!["pending", "confirmed"].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled once it is ${order.status}`,
+      });
+    }
+
+    order.status = "cancelled";
+    order.statusHistory.push({
+      status: "cancelled",
+      note: "Cancelled by customer",
+    });
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to cancel order" });
+  }
+};
