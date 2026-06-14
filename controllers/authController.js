@@ -178,6 +178,13 @@ exports.loginUser = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    res.cookie("userRole", user.role, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     // 7. Return safe user object
 
     res.status(200).json({
@@ -187,6 +194,7 @@ exports.loginUser = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         isVerified: user.isVerified,
+        role: user.role,
         profilePic: user.profilePic,
       },
     });
@@ -214,6 +222,7 @@ exports.logoutUser = async (req, res) => {
     // Clear cookies from browser
     res.clearCookie("accessToken", cookieOptions);
     res.clearCookie("refreshToken", cookieOptions);
+    res.clearCookie("userRole");
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
