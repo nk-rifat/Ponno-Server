@@ -76,18 +76,18 @@ exports.saveCartItem = async (req, res) => {
       cart = new Cart({ userId: req.userId, items: [] });
     }
 
-    const existing = cart.items.find(
+    const existingIndex = cart.items.findIndex(
       (i) => i.productId.toString() === productId,
     );
 
-    if (existing) {
-      existing.quantity += quantity;
+    if (existingIndex > -1) {
+      cart.items[existingIndex].quantity = safeQty;
     } else {
       cart.items.push({ productId, quantity: safeQty });
     }
 
     await cart.save();
-    res.json({ message: "Cart Updated" });
+    res.json({ message: "Cart Updated Successfully" });
   } catch (error) {
     res.status(500).json({ message: "Failed to update cart" });
   }
