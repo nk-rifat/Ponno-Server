@@ -1,5 +1,6 @@
 const User = require("../models/User");
 
+// get all customers
 exports.getAllCustomers = async (req, res) => {
   try {
     const { search, status, page = 1, limit = 10 } = req.query;
@@ -38,6 +39,25 @@ exports.getAllCustomers = async (req, res) => {
       page: Number(page),
       totalPages: Math.ceil(total / limit),
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// toggle block user
+
+exports.toggleBlockUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (user.role === "admin")
+      return res.status(403).json({ message: "Can not block admin" });
+
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+
+    res.json({ message: user.isBlocked ? "User blocked" : "User unblocked" });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
