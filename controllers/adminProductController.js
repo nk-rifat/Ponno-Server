@@ -39,3 +39,12 @@ exports.getAdminProducts = async (req, res) => {
     res.status(500).json({ message: "Failed to fetch products" });
   }
 };
+
+// delete product
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete product" });
+  }
+};
