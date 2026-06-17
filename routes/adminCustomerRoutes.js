@@ -4,7 +4,9 @@ const {
   toggleBlockUser,
   deleteUser,
 } = require("../controllers/adminCustomerController");
+
 const router = express.Router();
+
 const { verifyAccessToken, verifyAdmin } = require("../middleware/auth");
 
 router.get("/users", verifyAccessToken, verifyAdmin, getAllCustomers);
