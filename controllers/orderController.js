@@ -121,7 +121,7 @@ exports.placeOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-    console.log(error.message);
+  
     res.status(500).json({
       success: false,
       message: "Failed to place order",
