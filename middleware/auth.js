@@ -8,7 +8,7 @@ exports.verifyAccessToken = (req, res, next) => {
   }
   try {
     const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
-    
+
     req.userId = decoded.id;
     req.userRole = decoded.role;
     next();

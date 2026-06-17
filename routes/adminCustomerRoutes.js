@@ -3,7 +3,7 @@ const {
   getAllCustomers,
   toggleBlockUser,
   deleteUser,
-} = require("../controllers/adminController");
+} = require("../controllers/adminCustomerController");
 const router = express.Router();
 const { verifyAccessToken, verifyAdmin } = require("../middleware/auth");
 

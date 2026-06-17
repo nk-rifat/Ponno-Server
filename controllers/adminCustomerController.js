@@ -26,7 +26,9 @@ exports.getAllCustomers = async (req, res) => {
 
     const [users, total] = await Promise.all([
       User.find(query)
-        .select("name email profilePic isVerified isBlocked createdAt")
+        .select(
+          "firstName lastName email profilePic isVerified isBlocked createdAt",
+        )
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
