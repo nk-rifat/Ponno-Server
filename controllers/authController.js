@@ -277,7 +277,7 @@ exports.refreshAccessToken = async (req, res) => {
     }
 
     // 5. provide new access token
-    const newAccessToken = generateAccessToken(user._id);
+    const newAccessToken = generateAccessToken(user);
 
     res.cookie("accessToken", newAccessToken, {
       ...cookieOptions,
