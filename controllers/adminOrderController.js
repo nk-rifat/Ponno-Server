@@ -49,3 +49,46 @@ exports.getAdminOrders = async (req, res) => {
   }
 };
 
+// order to next status in sequence
+exports.advanceOrderStatus = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    if (order.status === "cancelled" || order.status === "delivered") {
+      return res.status(400).json({
+        success: false,
+        message: `Order is already ${order.status}, cannot advance further`,
+      });
+    }
+
+    const currentIndex = STATUS_FLOW.indexOf(order.status);
+    const nextStatus = STATUS_FLOW[currentIndex + 1];
+
+    if (!nextStatus) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No next status available" });
+    }
+
+    order.status = nextStatus;
+    order.statusHistory.push({
+      status: nextStatus,
+      note: "Updated by admin",
+    });
+
+    await order.save();
+
+    res
+      .status(200)
+      .json({ success: true, message: "Order status updated", order });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to update status" });
+  }
+};
