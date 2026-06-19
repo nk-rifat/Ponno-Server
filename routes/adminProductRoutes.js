@@ -12,6 +12,8 @@ const router = express.Router();
 
 const { verifyAccessToken, verifyAdmin } = require("../middleware/auth");
 
+const upload = require("../middleware/upload");
+
 router.get("/products", verifyAccessToken, verifyAdmin, getAdminProducts);
 router.post(
   "/products",
