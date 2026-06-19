@@ -92,3 +92,34 @@ exports.advanceOrderStatus = async (req, res) => {
       .json({ success: false, message: "Failed to update status" });
   }
 };
+
+// cancel order
+exports.adminCancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    if (!["pending", "confirmed", "processing"].includes(order.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be cancelled once it is ${order.status}`,
+      });
+    }
+
+    order.status = "cancelled";
+    order.statusHistory.push({
+      status: "cancelled",
+      note: "Cancelled by admin",
+    });
+
+    await order.save();
+
+    res.status(200).json({ success: true, message: "Order cancelled", order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to cancel order" });
+  }
+};
