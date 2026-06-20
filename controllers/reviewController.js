@@ -93,7 +93,7 @@ exports.createReview = async (req, res) => {
 };
 
 // get review
-exports.getProductReview = async (req, res) => {
+exports.getProductReviews = async (req, res) => {
   try {
     const { productId } = req.params;
     const page = parseInt(req.query.page) || 1;
