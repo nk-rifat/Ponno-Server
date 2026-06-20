@@ -6,7 +6,7 @@ const {
 const {
   verifyAccessToken,
   verifyAdmin,
-} = require("../middlewares/authMiddleware");
+} = require("../middleware/auth");
 
 router.get(
   "/dashboard/summary",
