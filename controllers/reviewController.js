@@ -191,3 +191,31 @@ exports.updateReview = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+// delete review
+exports.deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const userId = req.user._id;
+
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({ message: "Review not found" });
+    }
+
+    const isOwner = review.userId.toString() === userId.toString();
+    const isAdmin = req.user.role === "admin";
+
+    if (!isOwner && !isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You can only delete your own review" });
+    }
+
+    await review.deleteOne();
+    return res.status(200).json({ message: "Review deleted successfully" });
+  } catch (error) {
+    console.error("deleteReview error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
