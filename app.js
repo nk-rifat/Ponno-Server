@@ -11,6 +11,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const adminCustomerRoutes = require("./routes/adminCustomerRoutes");
 const adminProductRoutes = require("./routes/adminProductRoutes");
 const adminOrdersRoutes = require("./routes/adminOrderRoutes");
+const adminDashboardRoutes = require("./routes/adminDashboardRoutes");
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/admin", adminCustomerRoutes);
 app.use("/api/admin", adminProductRoutes);
 app.use("/api/admin", adminOrdersRoutes);
+app.use("/api/admin", adminDashboardRoutes);
 
 // Base Route
 app.get("/", (req, res) => {
