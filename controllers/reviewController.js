@@ -91,3 +91,58 @@ exports.createReview = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+// get review
+exports.getProductReview = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const sort = req.query.sort || "newest";
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product id" });
+    }
+
+    const sortMap = {
+      newest: { createdAt: -1 },
+      highest: { rating: -1, createdAt: -1 },
+      lowest: { rating: 1, createdAt: -1 },
+    };
+
+    const [reviews, total, summary] = await Promise.all([
+      Review.find({ productId })
+        .populate("userId", "name avatar")
+        .sort(sortMap[sort] || sortMap.newest)
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      Review.countDocuments({ productId }),
+      Review.aggregate([
+        { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+        { $group: { _id: "$rating", count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    let ratingSum = 0;
+    summary.forEach((s) => {
+      breakdown[s._id] = s.count;
+      ratingSum += s._id * s.count;
+    });
+
+    const averageRating = total > 0 ? +(ratingSum / total).toFixed(1) : 0;
+
+    return res.status(200).json({
+      reviews,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      averageRating,
+      breakdown,
+    });
+  } catch (error) {
+    console.error("getProductReviews error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
