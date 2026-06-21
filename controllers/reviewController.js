@@ -223,3 +223,23 @@ exports.deleteReview = async (req, res) => {
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+// get review for home page
+exports.getFeaturedReviews = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 6;
+    const minRating = parseInt(req.query.minRating) || 4;
+
+    const reviews = await Review.find({ rating: { $gte: minRating } })
+      .populate("userId", "firstName profilePic")
+      .populate("productId", "productName images")
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return res.status(200).json({ reviews });
+  } catch (error) {
+    console.error("getFeaturedReviews error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
