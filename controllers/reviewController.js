@@ -1,6 +1,7 @@
 const Review = require("../models/Review");
 const Order = require("../models/Order");
 const mongoose = require("mongoose");
+const recalculateProductRating = require("../utils/recalculateProductRating");
 
 // check review eligibility
 exports.checkReviewEligibility = async (req, res) => {
@@ -76,7 +77,9 @@ exports.createReview = async (req, res) => {
       comment: comment.trim(),
     });
 
-    const populated = await review.populate("userId", "name avatar");
+    await recalculateProductRating(productId);
+
+    const populated = await review.populate("userId", "firstName profilePic");
 
     return res.status(201).json({
       message: "Review submitted successfully",
@@ -142,7 +145,6 @@ exports.getProductReviews = async (req, res) => {
       breakdown,
     });
   } catch (error) {
-    console.error("getProductReviews error:", error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -180,14 +182,14 @@ exports.updateReview = async (req, res) => {
     }
 
     await review.save();
-    const populated = await review.populate("userId", "name avatar");
+    await recalculateProductRating(review.productId);
+    const populated = await review.populate("userId", "firstName profilePic");
 
     return res.status(200).json({
       message: "Review updated successfully",
       review: populated,
     });
   } catch (error) {
-    console.error("updateReview error:", error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
@@ -213,10 +215,11 @@ exports.deleteReview = async (req, res) => {
         .json({ message: "You can only delete your own review" });
     }
 
+    const productId = review.productId;
     await review.deleteOne();
+    await recalculateProductRating(productId);
     return res.status(200).json({ message: "Review deleted successfully" });
   } catch (error) {
-    console.error("deleteReview error:", error);
     return res.status(500).json({ message: "Something went wrong" });
   }
 };
