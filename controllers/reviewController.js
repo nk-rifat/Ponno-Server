@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 exports.checkReviewEligibility = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
       return res.status(400).json({ message: "Invalid product id" });
@@ -39,7 +39,7 @@ exports.checkReviewEligibility = async (req, res) => {
 exports.createReview = async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId;
     const { rating, comment } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(productId)) {
@@ -112,7 +112,7 @@ exports.getProductReviews = async (req, res) => {
 
     const [reviews, total, summary] = await Promise.all([
       Review.find({ productId })
-        .populate("userId", "name avatar")
+        .populate("userId", "firstName profilePic")
         .sort(sortMap[sort] || sortMap.newest)
         .skip((page - 1) * limit)
         .limit(limit)
@@ -151,7 +151,7 @@ exports.getProductReviews = async (req, res) => {
 exports.updateReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId;
     const { rating, comment } = req.body;
 
     const review = await Review.findById(reviewId);
@@ -196,7 +196,8 @@ exports.updateReview = async (req, res) => {
 exports.deleteReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const userId = req.user._id;
+    const userId = req.userId;
+    const userRole = req.userRole;
 
     const review = await Review.findById(reviewId);
     if (!review) {
@@ -204,7 +205,7 @@ exports.deleteReview = async (req, res) => {
     }
 
     const isOwner = review.userId.toString() === userId.toString();
-    const isAdmin = req.user.role === "admin";
+    const isAdmin = userRole === "admin";
 
     if (!isOwner && !isAdmin) {
       return res
