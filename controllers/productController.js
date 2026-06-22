@@ -35,7 +35,7 @@ const getAllProducts = async (req, res) => {
     if (sort === "price_asc") sortOption.price = 1;
     if (sort === "price_desc") sortOption.price = -1;
     if (sort === "newest") sortOption.createdAt = -1;
-    if (sort === "rating") sortOption.rating = -1;
+    if (sort === "rating") sortOption.averageRating = -1;
 
     // PAGINATION LOGIC
     const pageNumber = Number(page);
@@ -104,7 +104,7 @@ const getFeaturedProducts = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(8)
       .select(
-        "_id productName images price discountPrice stock rating category",
+        "_id productName images price discountPrice stock averageRating totalReviews category",
       );
 
     res.status(200).json({
