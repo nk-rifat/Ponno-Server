@@ -15,7 +15,7 @@ const {
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "strict",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
 };
 
 const jwt = require("jsonwebtoken");
@@ -187,7 +187,7 @@ exports.loginUser = async (req, res) => {
     res.cookie("userRole", user.role, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -227,7 +227,10 @@ exports.logoutUser = async (req, res) => {
     // Clear cookies from browser
     res.clearCookie("accessToken", cookieOptions);
     res.clearCookie("refreshToken", cookieOptions);
-    res.clearCookie("userRole");
+    res.clearCookie("userRole", {
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
 
     res.status(200).json({ message: "Logged out successfully" });
   } catch (error) {
