@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
-const generateReceiptPDF = require("../utils/generateReceipt");
+const generateReceiptPDF = require("../utils/receiptTemplate");
 
 const getDeliveryCharge = (zila = "") => {
   const normalized = zila.toLowerCase().trim();
