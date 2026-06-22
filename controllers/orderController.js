@@ -1,8 +1,7 @@
-const puppeteer = require("puppeteer");
 const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
-const receiptTemplate = require("../utils/receiptTemplate");
+const generateReceiptPDF = require("../utils/generateReceipt");
 
 const getDeliveryCharge = (zila = "") => {
   const normalized = zila.toLowerCase().trim();
@@ -240,22 +239,7 @@ exports.generateOrderReceipt = async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
-    const html = receiptTemplate(order);
-
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-
-    const pdfBuffer = await page.pdf({
-      format: "A4",
-      printBackground: true,
-      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
-    });
-
-    await browser.close();
+    const pdfBuffer = await generateReceiptPDF(order);
 
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(

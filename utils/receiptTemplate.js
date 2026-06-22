@@ -1,183 +1,221 @@
-function receiptTemplate(order) {
-  const { delivery, items, subtotal, deliveryCharge, total } = order;
+const PDFDocument = require("pdfkit");
 
-  const itemsRows = items
-    .map(
-      (item) => `
-        <tr>
-          <td style="padding: 10px 0; color: #374151;">${item.name}</td>
-          <td style="padding: 10px 0; color: #374151; text-align: center;">${item.quantity}</td>
-          <td style="padding: 10px 0; color: #374151; text-align: right;">Tk ${item.price}</td>
-          <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 600;">Tk ${item.price * item.quantity}</td>
-        </tr>
-      `,
-    )
-    .join("");
+function generateReceiptPDF(order) {
+  return new Promise((resolve, reject) => {
+    const { delivery, items, subtotal, deliveryCharge, total } = order;
 
-  return `
-  <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="utf-8" />
-      <style>
-        body {
-          font-family: 'Helvetica', Arial, sans-serif;
-          margin: 0;
-          padding: 40px;
-          color: #111827;
-        }
-        .header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 30px;
-        }
-        .brand {
-          font-size: 22px;
-          font-weight: 700;
-          color: #047857;
-        }
-        .subtitle {
-          font-size: 12px;
-          color: #6b7280;
-          margin-top: 2px;
-        }
-        .meta {
-          text-align: right;
-          font-size: 12px;
-          color: #374151;
-          line-height: 1.6;
-        }
-        .status-badge {
-          display: inline-block;
-          background: #d1fae5;
-          color: #047857;
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 10px;
-          border-radius: 999px;
-        }
-        .section-title {
-          font-size: 13px;
-          font-weight: 700;
-          color: #111827;
-          margin-bottom: 8px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-        .delivery-box {
-          background: #f9fafb;
-          border-radius: 10px;
-          padding: 16px;
-          font-size: 13px;
-          color: #374151;
-          line-height: 1.6;
-          margin-bottom: 30px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-bottom: 20px;
-        }
-        thead th {
-          text-align: left;
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #6b7280;
-          border-bottom: 2px solid #e5e7eb;
-          padding-bottom: 10px;
-        }
-        thead th:nth-child(2) { text-align: center; }
-        thead th:nth-child(3), thead th:nth-child(4) { text-align: right; }
-        tbody tr {
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .totals {
-          width: 260px;
-          margin-left: auto;
-          font-size: 13px;
-        }
-        .totals-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 6px 0;
-          color: #4b5563;
-        }
-        .totals-row.grand {
-          border-top: 2px solid #111827;
-          margin-top: 8px;
-          padding-top: 12px;
-          font-size: 16px;
-          font-weight: 700;
-          color: #111827;
-        }
-        .footer {
-          margin-top: 60px;
-          text-align: center;
-          font-size: 11px;
-          color: #9ca3af;
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div>
-          <div class="brand">Ponno</div>
-          <div class="subtitle">Order Receipt</div>
-        </div>
-        <div class="meta">
-          <div>Order #${order._id.toString().slice(-8).toUpperCase()}</div>
-          <div>${new Date(order.createdAt).toLocaleDateString()}</div>
-          <div style="margin-top: 4px;">
-            <span class="status-badge">${order.status.toUpperCase()}</span>
-          </div>
-        </div>
-      </div>
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    const buffers = [];
 
-      <div class="section-title">Delivery Information</div>
-      <div class="delivery-box">
-        <div><strong>${delivery.name}</strong> &middot; ${delivery.phone}</div>
-        <div>
-          ${delivery.address ? delivery.address + ", " : ""}${delivery.upazila ? delivery.upazila + ", " : ""}${delivery.zila}, ${delivery.division}
-        </div>
-        ${delivery.note ? `<div style="margin-top: 4px; color: #6b7280;">Note: ${delivery.note}</div>` : ""}
-      </div>
+    doc.on("data", (chunk) => buffers.push(chunk));
+    doc.on("end", () => resolve(Buffer.concat(buffers)));
+    doc.on("error", reject);
 
-      <div class="section-title">Items</div>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Price</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${itemsRows}
-        </tbody>
-      </table>
+    const green = "#047857";
+    const gray = "#6b7280";
+    const dark = "#111827";
+    const lightGray = "#f3f4f6";
+    const pageWidth = doc.page.width - 80;
 
-      <div class="totals">
-        <div class="totals-row">
-          <span>Subtotal</span>
-          <span>Tk ${subtotal}</span>
-        </div>
-        <div class="totals-row">
-          <span>Delivery Charge</span>
-          <span>Tk ${deliveryCharge}</span>
-        </div>
-        <div class="totals-row grand">
-          <span>Total</span>
-          <span>Tk ${total}</span>
-        </div>
-      </div>
+    // ── HEADER ──────────────────────────────────────────────
+    doc
+      .fontSize(22)
+      .fillColor(green)
+      .font("Helvetica-Bold")
+      .text("Ponno", 40, 40);
+    doc
+      .fontSize(11)
+      .fillColor(gray)
+      .font("Helvetica")
+      .text("Order Receipt", 40, 66);
 
-      <div class="footer">Thank you for shopping with us!</div>
-    </body>
-  </html>
-  `;
+    const orderId = order._id.toString().slice(-8).toUpperCase();
+    const orderDate = new Date(order.createdAt).toLocaleDateString("en-GB");
+    const status = order.status.toUpperCase();
+
+    doc
+      .fontSize(11)
+      .fillColor(dark)
+      .font("Helvetica-Bold")
+      .text(`Order #${orderId}`, 40, 40, { align: "right" });
+    doc
+      .fontSize(10)
+      .fillColor(gray)
+      .font("Helvetica")
+      .text(orderDate, 40, 56, { align: "right" });
+
+    doc.roundedRect(doc.page.width - 120, 70, 80, 18, 9).fill("#d1fae5");
+    doc
+      .fontSize(9)
+      .fillColor(green)
+      .font("Helvetica-Bold")
+      .text(status, doc.page.width - 120, 74, { width: 80, align: "center" });
+
+    doc
+      .moveTo(40, 100)
+      .lineTo(doc.page.width - 40, 100)
+      .strokeColor("#e5e7eb")
+      .lineWidth(1)
+      .stroke();
+
+    // ── DELIVERY INFO ────────────────────────────────────────
+    doc.moveDown(1.5);
+    doc
+      .fontSize(10)
+      .fillColor(gray)
+      .font("Helvetica-Bold")
+      .text("DELIVERY INFORMATION", 40);
+
+    doc.moveDown(0.4);
+    const boxTop = doc.y;
+    doc
+      .roundedRect(40, boxTop, pageWidth, delivery.note ? 80 : 65, 8)
+      .fill(lightGray);
+
+    doc
+      .fontSize(11)
+      .fillColor(dark)
+      .font("Helvetica-Bold")
+      .text(`${delivery.name}  ·  ${delivery.phone}`, 55, boxTop + 12);
+
+    const addressParts = [
+      delivery.address,
+      delivery.upazila,
+      delivery.zila,
+      delivery.division,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    doc
+      .fontSize(10)
+      .fillColor("#374151")
+      .font("Helvetica")
+      .text(addressParts, 55, boxTop + 28, { width: pageWidth - 30 });
+
+    if (delivery.note) {
+      doc
+        .fontSize(10)
+        .fillColor(gray)
+        .text(`Note: ${delivery.note}`, 55, boxTop + 48, {
+          width: pageWidth - 30,
+        });
+    }
+
+    // ── ITEMS TABLE ──────────────────────────────────────────
+    doc.y = boxTop + (delivery.note ? 95 : 80);
+    doc.moveDown(0.8);
+
+    doc.fontSize(10).fillColor(gray).font("Helvetica-Bold").text("ITEMS", 40);
+    doc.moveDown(0.4);
+
+    const tableTop = doc.y;
+    doc.fontSize(9).fillColor(gray).font("Helvetica-Bold");
+    doc.text("ITEM", 40, tableTop);
+    doc.text("QTY", 320, tableTop, { width: 60, align: "center" });
+    doc.text("PRICE", 380, tableTop, { width: 70, align: "right" });
+    doc.text("TOTAL", 450, tableTop, { width: 90, align: "right" });
+
+    doc.moveDown(0.3);
+    doc
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .strokeColor("#e5e7eb")
+      .lineWidth(1)
+      .stroke();
+
+    items.forEach((item) => {
+      doc.moveDown(0.4);
+      const rowY = doc.y;
+
+      doc
+        .fontSize(10)
+        .fillColor(dark)
+        .font("Helvetica")
+        .text(item.name, 40, rowY, { width: 270 });
+      doc.text(String(item.quantity), 320, rowY, {
+        width: 60,
+        align: "center",
+      });
+      doc.text(`Tk ${item.price}`, 380, rowY, { width: 70, align: "right" });
+      doc
+        .font("Helvetica-Bold")
+        .text(`Tk ${item.price * item.quantity}`, 450, rowY, {
+          width: 90,
+          align: "right",
+        });
+
+      doc.moveDown(0.4);
+      doc
+        .moveTo(40, doc.y)
+        .lineTo(doc.page.width - 40, doc.y)
+        .strokeColor(lightGray)
+        .lineWidth(0.5)
+        .stroke();
+    });
+
+    // ── TOTALS ───────────────────────────────────────────────
+    doc.moveDown(1);
+    const totalsX = 350;
+    const totalsWidth = 190;
+
+    doc.fontSize(10).fillColor("#4b5563").font("Helvetica");
+    doc.text("Subtotal", totalsX, doc.y, { width: totalsWidth / 2 });
+    doc.text(
+      `Tk ${subtotal}`,
+      totalsX + totalsWidth / 2,
+      doc.y - doc.currentLineHeight(),
+      {
+        width: totalsWidth / 2,
+        align: "right",
+      },
+    );
+
+    doc.moveDown(0.5);
+    doc.text("Delivery Charge", totalsX, doc.y, { width: totalsWidth / 2 });
+    doc.text(
+      `Tk ${deliveryCharge}`,
+      totalsX + totalsWidth / 2,
+      doc.y - doc.currentLineHeight(),
+      {
+        width: totalsWidth / 2,
+        align: "right",
+      },
+    );
+
+    doc.moveDown(0.5);
+    doc
+      .moveTo(totalsX, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .strokeColor(dark)
+      .lineWidth(1.5)
+      .stroke();
+    doc.moveDown(0.5);
+
+    doc.fontSize(13).fillColor(dark).font("Helvetica-Bold");
+    doc.text("Total", totalsX, doc.y, { width: totalsWidth / 2 });
+    doc.text(
+      `Tk ${total}`,
+      totalsX + totalsWidth / 2,
+      doc.y - doc.currentLineHeight(),
+      {
+        width: totalsWidth / 2,
+        align: "right",
+      },
+    );
+
+    // ── FOOTER ───────────────────────────────────────────────
+    doc
+      .fontSize(10)
+      .fillColor(gray)
+      .font("Helvetica")
+      .text("Thank you for shopping with us!", 40, doc.page.height - 60, {
+        align: "center",
+        width: pageWidth,
+      });
+
+    doc.end();
+  });
 }
 
-module.exports = receiptTemplate;
+module.exports = generateReceiptPDF;
