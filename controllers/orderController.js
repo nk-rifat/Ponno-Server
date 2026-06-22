@@ -1,5 +1,8 @@
+const puppeteer = require("puppeteer");
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const receiptTemplate = require("../utils/receiptTemplate");
 
 const getDeliveryCharge = (zila = "") => {
   const normalized = zila.toLowerCase().trim();
@@ -121,7 +124,6 @@ exports.placeOrder = async (req, res) => {
       order,
     });
   } catch (error) {
-  
     res.status(500).json({
       success: false,
       message: "Failed to place order",
@@ -214,5 +216,55 @@ exports.cancelOrder = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to cancel order" });
+  }
+};
+
+// generate receipt
+
+exports.generateOrderReceipt = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.userId;
+
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+      return res.status(400).json({ message: "Invalid order id" });
+    }
+
+    const order = await Order.findById(orderId).lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.userId.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    const html = receiptTemplate(order);
+
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px", left: "20px", right: "20px" },
+    });
+
+    await browser.close();
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=receipt-${order._id.toString().slice(-8)}.pdf`,
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("generateOrderReceipt error:", error);
+    return res.status(500).json({ message: "Something went wrong" });
   }
 };

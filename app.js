@@ -27,8 +27,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
-app.use("/api/products", productRoutes);
 app.use("/api/products", reviewRoutes);
+app.use("/api/products", productRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);

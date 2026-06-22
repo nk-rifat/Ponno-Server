@@ -10,7 +10,7 @@ const {
 } = require("../controllers/reviewController");
 const { verifyAccessToken } = require("../middleware/auth");
 
-router.get("/featured", getFeaturedReviews);
+router.get("/reviews", getFeaturedReviews);
 router.get("/:productId/reviews", getProductReviews);
 router.get(
   "/:productId/reviews/eligibility",
